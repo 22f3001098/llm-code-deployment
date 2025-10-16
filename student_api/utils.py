@@ -1,35 +1,24 @@
+from github import Github
 import os
-import time
-from github import Github, GithubException
 
-def push_to_github(repo_path, repo_name):
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+def push_to_github(folder_path: str, repo_name: str):
     """
-    Push the generated app to GitHub.
-    Handles existing repos and returns repo URL, commit SHA, and GitHub Pages URL.
+    Creates a GitHub repo, pushes the folder, and returns repo URL and commit SHA.
     """
-    g = Github(os.getenv("GITHUB_TOKEN"))
+    g = Github(GITHUB_TOKEN)
     user = g.get_user()
+    repo = user.create_repo(repo_name, private=False)
+    
+    # Simplified: Add index.html
+    file_path = os.path.join(folder_path, "index.html")
+    with open(file_path, "r") as f:
+        content = f.read()
+    repo.create_file("index.html", "Initial commit", content)
 
-    # Make repo name unique by appending timestamp
-    repo_name_unique = f"{repo_name.replace(' ', '-')}_{int(time.time())}"
-
-    try:
-        # Try to create the repo
-        repo = user.create_repo(repo_name_unique, private=False)
-        print(f"Created new repo: {repo_name_unique}")
-    except GithubException as e:
-        if e.status == 422:
-            # Repo already exists, get existing one
-            repo = user.get_repo(repo_name_unique)
-            print(f"Repo already exists, using existing repo: {repo_name_unique}")
-        else:
-            # Other GitHub errors
-            raise e
-
-    # TODO: Add your actual logic to commit/push files from repo_path
-    commit_sha = "dummy_commit_sha"  # Replace with actual commit SHA logic
-
-    # GitHub Pages URL
-    pages_url = f"https://{user.login}.github.io/{repo_name_unique}/"
-
-    return repo.html_url, commit_sha, pages_url
+    # Return URLs
+    repo_url = repo.html_url
+    commit_sha = repo.get_commits()[0].sha
+    pages_url = f"https://{user.login}.github.io/{repo_name}/"
+    return repo_url, commit_sha
