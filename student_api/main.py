@@ -6,10 +6,8 @@ import os
 
 app = FastAPI()
 
-# Secret to verify requests
 STUDENT_SECRET = os.getenv("STUDENT_SECRET")
 
-# Request model
 class TaskRequest(BaseModel):
     email: str
     secret: str
@@ -18,15 +16,12 @@ class TaskRequest(BaseModel):
     brief: str
     evaluation_url: str
 
-# Root GET endpoint for testing
 @app.get("/")
-def root():
+async def root():
     return {"message": "LLM Code Deployment API is running!"}
 
-# POST endpoint to receive tasks
 @app.post("/api/endpoint")
 async def receive_task(request: TaskRequest):
-    # Verify secret
     if request.secret != STUDENT_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
 
@@ -34,7 +29,7 @@ async def receive_task(request: TaskRequest):
     repo_path, pages_url = generate_app(request.brief, request.task)
 
     # Push to GitHub and enable Pages
-    repo_url, commit_sha = push_to_github(repo_path, request.task)
+    repo_url, commit_sha, pages_url = push_to_github(repo_path, request.task)
 
     return {
         "status": "ok",
