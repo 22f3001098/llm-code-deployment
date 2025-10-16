@@ -1,0 +1,8 @@
+services:
+  student_api:
+    build: .
+    container_name: student_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
