@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from generator import generate_app
 from utils import push_to_github
@@ -6,8 +6,10 @@ import os
 
 app = FastAPI()
 
+# Secret to verify requests
 STUDENT_SECRET = os.getenv("STUDENT_SECRET")
 
+# Request model
 class TaskRequest(BaseModel):
     email: str
     secret: str
@@ -16,8 +18,15 @@ class TaskRequest(BaseModel):
     brief: str
     evaluation_url: str
 
+# Root GET endpoint for testing
+@app.get("/")
+def root():
+    return {"message": "LLM Code Deployment API is running!"}
+
+# POST endpoint to receive tasks
 @app.post("/api/endpoint")
 async def receive_task(request: TaskRequest):
+    # Verify secret
     if request.secret != STUDENT_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
 
